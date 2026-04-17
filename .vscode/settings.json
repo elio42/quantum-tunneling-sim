@@ -1,0 +1,6 @@
+{
+  "editor.fontFamily": "'Fira Code', monospace",
+  "editor.fontLigatures": true,
+  "terminal.integrated.fontFamily": "'Fira Code', monospace",
+  "terminal.integrated.fontLigatures.enabled": true
+}
