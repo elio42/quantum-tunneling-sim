@@ -14,11 +14,8 @@ int main() {
 
     std::cout << "Hello FFT" << std::endl;
     std::vector<std::complex<double>> arr = FFT::e(1024,10);
-    std::vector<std::complex<double>> result = FFT::fft(arr);
-    
-
-    FFT::write_vector_to_file(arr, "../out1.csv");
-    FFT::write_vector_to_file(result, "../out2.csv");
+    arr = FFT::forward(arr);
+    arr = FFT::inverse(arr);
 
     
 
@@ -31,15 +28,16 @@ int main() {
     std::vector<std::tuple<double, double>> plot_data;
     for (size_t i = 0; i < arr.size(); ++i) {
         plot_data.push_back(std::make_tuple(
-            arr[i].real(), 
-            float(i)
+            float(i),
+            arr[i].real()
+            
         ));
     }
 
 // 3. Format the graph for the Complex Plane
     gp << "set title 'Complex Plane (Argand Diagram)'\n";
-    gp << "set xlabel 'Real Part'\n";
-    gp << "set ylabel 'Imaginary Part'\n";
+    gp << "set xlabel 'index'\n";
+    gp << "set ylabel 'Real Part'\n";
     gp << "set grid\n";
     
     // 'linespoints' draws a line AND puts a dot at every data point
