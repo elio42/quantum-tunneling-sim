@@ -1,5 +1,5 @@
 #include <complex>
-#include <vector>
+
 #include<iostream>
 
 #include <fstream>
@@ -7,13 +7,16 @@
 
 #include <tuple>
 #include <cmath>
+#include "fft.hpp"
+
 
 
 using namespace std;
 
-void write_vector_to_file(const vector<complex<double>>& vec, const string& filename) 
+void FFT::write_vector_to_file(const vector<complex<double>>& vec, const string& filename) 
 {
     ofstream file(filename);
+    cout << "Writing vector to file: " << filename << endl;
     file << "Real,Imaginary\n"; // Write header
     for (const auto& c : vec) {
         file << c.real() << "," << c.imag() << "\n"; // Write real
@@ -24,7 +27,7 @@ void write_vector_to_file(const vector<complex<double>>& vec, const string& file
 
 
 
-vector<complex<double>> x2(int n) {
+vector<complex<double>> FFT::x2(int n) {
     vector<complex<double>> result(n);
     for (int i = 0; i < n; ++i) {
         result[i] = complex<double>(i *i , 0.0); // Example values
@@ -33,7 +36,7 @@ vector<complex<double>> x2(int n) {
 }
 
 
-vector<complex<double>> e(int n, int frequency = 1) {
+vector<complex<double>> FFT::e(int n, int frequency) {
     vector<complex<double>> result(n);
 
 
@@ -52,8 +55,7 @@ vector<complex<double>> e(int n, int frequency = 1) {
 
 
 
-
-vector<complex<double>> gauss(int n) {
+vector<complex<double>> FFT::gauss(int n) {
     vector<complex<double>> result(n);
 
 
@@ -77,12 +79,12 @@ vector<complex<double>> gauss(int n) {
     return result;
 }
 
-bool is_power_of_two(size_t n) {
+bool FFT::is_power_of_two(size_t n) {
     //unchecked
     return (n & (n - 1)) == 0 && n > 0;
 }
 
-tuple<vector<complex<double>>, vector<complex<double>>> split_even_odd(const vector<complex<double>>& input) {
+tuple<vector<complex<double>>, vector<complex<double>>> FFT::split_even_odd(const vector<complex<double>>& input) {
     vector<complex<double>> even;
     vector<complex<double>> odd;
     
@@ -105,12 +107,12 @@ tuple<vector<complex<double>>, vector<complex<double>>> split_even_odd(const vec
 }
 
 
-complex<double> twiddle_factor(int k, int n) {
+complex<double> FFT::twiddle_factor(int k, int n) {
     double angle = -2.0 * M_PI * k / n;
     return complex<double>(cos(angle), sin(angle));
 }
 
-vector<complex<double>> fft(const vector<complex<double>>& input) {
+vector<complex<double>> FFT::fft(const vector<complex<double>>& input) {
     
     const size_t n = input.size();
 
@@ -136,21 +138,11 @@ vector<complex<double>> fft(const vector<complex<double>>& input) {
     return out; // Placeholder return value
 }
 
-
-int main() {
-    cout << "Hello FFT" << endl;
-    vector<complex<double>> arr = e(1024,10);
-    vector<complex<double>> result = fft(arr);
-    
-
-    write_vector_to_file(arr, "out1.csv");
-    write_vector_to_file(result, "out2.csv");
-
-
-
-    return 0;
+void FFT::print_vector(const vector<complex<double>>& vec) {
+    for (const auto& c : vec) {
+        cout << c.real() << " + " << c.imag() << "i" << endl;
+    }
 }
-
 
 
 
