@@ -1,7 +1,8 @@
 
 module SpStFT
+    using Pkg
+    Pkg.add("FFTW")
     using FFTW
-    using Plots
 
 
     struct fastMultiElectronSystem
@@ -22,45 +23,15 @@ module SpStFT
         dx::Real
     end
 
-    MultiSys = Union{MultiElectronSystem, fastMultiElectronSystem}
+    AllSys = Union{MultiElectronSystem, fastMultiElectronSystem, SingleElectronSystem}
 
 
-    function step(sys::MultiSys, dt::Real)
+    function step(sys::AllSys, dt::Real)
         kick(sys, dt/2)
         drift(sys, dt)
         kick(sys, dt/2)
-        comp_ϕ(sys)
     end
-
-
-
-
-
-    function comp_ϕ(ψ::Vector{complex}, dx::Real)
-        N = length(ψ)
-        main_diag = fill(-2.0 / dx^2, N)
-        off_diag = fill(1.0 / dx^2, N-1)
-        A = diagm(0 => main_diag, -1 => off_diag, 1 => off_diag)
-        ϕ = A * ψ
-        return ϕ    
-    end
-
-    function comp_ϕ(sys::MultiElectronSystem)
-        ϕ = sys.ϕ
-
-        for i in 1:size(sys.ψ, 2)
-            ϕ[:, i] = comp_ϕ(sys.ψ[:, i], sys.dx)
-        end
-    end
-
-
     
-
-    function step(sys::SingleElectronSystem, dt::Real)
-        kick(sys, dt/2)
-        drift(sys, dt)
-        kick(sys, dt/2)
-    end
 
 
     function kick(sys::SingleElectronSystem, dt::Real)
@@ -103,17 +74,5 @@ module SpStFT
     end
     
     
-    function Plot(ψs, ϕs,sys::anySys)
-        nsteps = length(ψs)
-        x = range(-length(ψs[1])*sys.dx/2, length(ψs[1])*sys.dx/2, length=length(ψs[1]))
-
-        anim = @animate for i in 1:nsteps
-            plot(x, abs.(ψs[i]).^2, title="Wave Function Probability Density", xlabel="x", ylabel="|ψ|^2")
-            plot!(x, real.(ψs[i]), label="Real Part")
-            plot!(x, imag.(ψs[i]), label="Imaginary Part")
-            plot!(x, ϕs[i], label="Potential", linestyle=:dash)
-        end
-        mp4(anim, "wave_evolution.mp4", fps=60)
-        
-    end
+    
 end
