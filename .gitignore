@@ -47,3 +47,5 @@
 #Gnuplot Header files
 gnuplot-iostream.h
 *.gp
+
+**.mp4
