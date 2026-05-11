@@ -1,75 +1,130 @@
 import sys
 import os
 import subprocess
+from pathlib import Path
+import animate_wavefunction
 
-def call_SSFM1D(N, L, padding, time, dt=0.1, w=40):
-    subprocess.run(["build/SSFM1D", "-N", str(N), "-L", str(L), "-P", str(padding), "-t", str(time), "-dt", str(dt), "-w", str(w)])
 
-def call_animation_script(title, output, fps):
-    subprocess.run(["python3", "results/animate_wavefunction.py", "--title", title, "--output", output, "--fps", str(fps)])
+def call_SSFM1D(Nx, Ny, Lx, padding, time, dt=0.1, wx=40, wy=40):
+	"""Call the SSFM1D solver with 2D parameters."""
+	subprocess.run([
+		"../src/build/SSFM1D", 
+		"-Nx", str(Nx), 
+		"-Ny", str(Ny),
+		"-Lx", str(Lx), 
+		"-P", str(padding), 
+		"-t", str(time), 
+		"-dt", str(dt), 
+		"-wx", str(wx),
+		"-wy", str(wy)
+	])
+
+
+def animate(title="", output_file="wavefunction.mp4", fps=20, output_dir="output"):
+	"""Create animation from output files.
+	
+	Args:
+		title: Optional title for the animation
+		output_file: Output video filename
+		fps: Frames per second
+		output_dir: Directory containing wavefunction output files
+	"""
+	sys.argv = ["animate_wavefunction.py"]  # Reset argv for argparse
+	if title:
+		sys.argv.extend(["--title", title])
+	sys.argv.extend(["--output", output_file])
+	sys.argv.extend(["--fps", str(fps)])
+	sys.argv.extend(["--output-dir", output_dir])
+	
+	animate_wavefunction.main()
+
 
 def test_spacial_equality():
-    """Test convergence with different spatial resolutions (N values)"""
-    base_N = 1024
-    base_padding = 25
-    time = 0.07
-    L = 1
+	"""Test convergence with different spatial resolutions (Nx, Ny values)"""
+	base_Nx = 256
+	base_Ny = 256
+	base_padding = 25
+	time = 0.01
+	Lx = 1.0
 
-    for N in [1024, 2048]:
-        padding = base_padding * (N // base_N)
-        
-        call_SSFM1D(N, L, padding, time)
-        
-        title = f"TDSE SSFM: Spatial Convergence N={N}"
-        output = f"results/tdse_spacial_N{N}.mp4"
-        call_animation_script(title, output, 30)
+	for Nx in [128, 256]:
+		Ny = Nx  # Keep square grids
+		padding = base_padding
+		
+		print(f"\n{'='*60}")
+		print(f"Running simulation: Nx={Nx}, Ny={Ny}, Lx={Lx}")
+		print(f"{'='*60}")
+		call_SSFM1D(Nx, Ny, Lx, padding, time)
+		
+		title = f"TDSE SSFM 2D: Spatial Resolution Nx={Nx}, Ny={Ny}"
+		output = f"tdse_spatial_Nx{Nx}_Ny{Ny}.mp4"
+		animate(title=title, output_file=output, fps=30)
+
 
 def test_dt_stability():
-    """Test stability with different dt safety factors"""
-    N = 1024
-    L = 1
-    padding = 25
-    time = 0.07
-    
-    for dt in [0.01, 0.1, 1.0]:
-        call_SSFM1D(N, L, padding, time, dt=dt)
-        
-        title = f"TDSE SSFM: Stability dt={dt}"
-        output = f"results/tdse_stability_dt{dt}.mp4"
-        call_animation_script(title, output, 30)
+	"""Test stability with different dt safety factors"""
+	Nx = 128
+	Ny = 128
+	Lx = 1.0
+	padding = 25
+	time = 0.01
+	
+	for dt in [0.05, 0.1, 0.5]:
+		print(f"\n{'='*60}")
+		print(f"Running simulation: dt_safety={dt}")
+		print(f"{'='*60}")
+		call_SSFM1D(Nx, Ny, Lx, padding, time, dt=dt)
+		
+		title = f"TDSE SSFM 2D: Stability Test dt={dt}"
+		output = f"tdse_stability_dt{dt}.mp4"
+		animate(title=title, output_file=output, fps=30)
+
 
 def test_wave_momentum():
-    """Test different initial wave numbers (momentum)"""
-    N = 1024
-    L = 1
-    padding = 25
-    time = 0.07
-    
-    for w in [40, 80, 120]:
-        call_SSFM1D(N, L, padding, time, w=w)
-        
-        title = f"TDSE SSFM: Wave Number w={w}"
-        output = f"results/tdse_momentum_w{w}.mp4"
-        call_animation_script(title, output, 30)
+	"""Test different initial wave numbers (momentum) in x and y"""
+	Nx = 128
+	Ny = 128
+	Lx = 1.0
+	padding = 25
+	time = 0.01
+	
+	for wx in [5, 10, 20]:
+		wy = wx  # Keep symmetric for simplicity
+		print(f"\n{'='*60}")
+		print(f"Running simulation: wx={wx}, wy={wy}")
+		print(f"{'='*60}")
+		call_SSFM1D(Nx, Ny, Lx, padding, time, wx=wx, wy=wy)
+		
+		title = f"TDSE SSFM 2D: Wave Momentum wx={wx}, wy={wy}"
+		output = f"tdse_momentum_wx{wx}_wy{wy}.mp4"
+		animate(title=title, output_file=output, fps=30)
 
-def test_domain_scaling():
-    """Test larger domain with doubled resolution"""
-    N = 2048
-    L = 2
-    padding = 50
-    time = 0.07
-    
-    call_SSFM1D(N, L, padding, time)
-    
-    title = f"TDSE SSFM: Larger Domain L={L}, N={N}"
-    output = f"results/tdse_domain_L{L}_N{N}.mp4"
-    call_animation_script(title, output, 30)
+
+def test_asymmetric_momentum():
+	"""Test asymmetric wave numbers (different momentum in x and y)"""
+	Nx = 128
+	Ny = 128
+	Lx = 1.0
+	padding = 25
+	time = 0.01
+	
+	print(f"\n{'='*60}")
+	print(f"Running simulation: Asymmetric momentum wx=10, wy=5")
+	print(f"{'='*60}")
+	call_SSFM1D(Nx, Ny, Lx, padding, time, wx=10, wy=5)
+	
+	title = "TDSE SSFM 2D: Asymmetric Wave Packet (wx=10, wy=5)"
+	output = "tdse_asymmetric_momentum.mp4"
+	animate(title=title, output_file=output, fps=30)
+
 
 def main():
-    test_spacial_equality()
-    test_dt_stability()
-    test_wave_momentum()
-    test_domain_scaling()
+	# Uncomment the test(s) you want to run
+	test_spacial_equality()
+	# test_dt_stability()
+	# test_wave_momentum()
+	# test_asymmetric_momentum()
+
 
 if __name__ == "__main__":
-    main()
+	main()

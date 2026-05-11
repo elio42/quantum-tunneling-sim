@@ -56,43 +56,55 @@ int main(int argc, char *argv[])
     
     parser.add_argument("-t", "--total-time")
         .help("Total simulation time")
-        .default_value(0.01)
+        .default_value(0.02)
         .scan<'g', double>()
         .nargs(1);
 
-    parser.add_argument("-N", "--number-of-points")
-        .help("Number of grid points")
-        .default_value(1024.0)
+    parser.add_argument("-Nx", "--nx")
+        .help("Number of grid points in x-direction")
+        .default_value(256.0)
         .scan<'g', double>()
         .nargs(1);
 
-    parser.add_argument("-L", "--length")
-        .help("Length of the grid")
+    parser.add_argument("-Ny", "--ny")
+        .help("Number of grid points in y-direction")
+        .default_value(256.0)
+        .scan<'g', double>()
+        .nargs(1);
+
+    parser.add_argument("-Lx", "--length-x")
+        .help("Length of the grid in x-direction")
         .default_value(1.0)
         .scan<'g', double>()
         .nargs(1);
 
     parser.add_argument("-P", "--padding")
         .help("Padding for the grid")
-        .default_value(size_t{50})
+        .default_value(size_t{16})
         .scan<'u', size_t>()
         .nargs(1);
 
     parser.add_argument("-i", "--output-interval")
         .help("Simulation-time interval between saved output files")
-        .default_value(0.00005)
+        .default_value(0.0003)
         .scan<'g', double>()
         .nargs(1);
 
     parser.add_argument("-dt", "--delta-time")
         .help("Time step saftey factor, 1 would be the maximum allowed by the stability condition.")
-        .default_value(0.1)
+        .default_value(0.5)
         .scan<'g', double>()
         .nargs(1);
 
-    parser.add_argument("-w", "--number-of-waves")
-        .help("Number of waves in the initial wave packet, controls the initial momentum of the wave packet.")
-        .default_value(40)
+    parser.add_argument("-wx", "--waves-x")
+        .help("Number of waves in x-direction (controls initial momentum)")
+        .default_value(10)
+        .scan<'i', int>()
+        .nargs(1);
+
+    parser.add_argument("-wy", "--waves-y")
+        .help("Number of waves in y-direction (controls initial momentum)")
+        .default_value(1)
         .scan<'i', int>()
         .nargs(1);
     
@@ -110,7 +122,13 @@ int main(int argc, char *argv[])
 
     // Run The Simulation.
     std::cout << "Starting simulation" << std::endl;
-    SSFM2D ssfm(parser.get<double>("--number-of-points"), parser.get<double>("--length"), parser.get<size_t>("--padding"), parser.get<double>("--delta-time"), parser.get<int>("--number-of-waves"));
+    SSFM2D ssfm(parser.get<double>("--nx"), 
+                parser.get<double>("--ny"),
+                parser.get<double>("--length-x"), 
+                parser.get<size_t>("--padding"), 
+                parser.get<double>("--delta-time"), 
+                parser.get<int>("--waves-x"),
+                parser.get<int>("--waves-y"));
     double current_time = 0;
     double next_output_time = 0.0;
     int i = 0;

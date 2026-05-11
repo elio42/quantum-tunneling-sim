@@ -13,26 +13,46 @@ const double m = 1;
 
 class SSFM2D {
     private:
-        std::vector<double> grid;
+        // Grid coordinates
+        std::vector<double> grid_x;
+        std::vector<double> grid_y;
+        
+        // Wavefunction and potentials (flat 2D arrays)
         std::vector<std::complex<double>> waveFunction;
         std::vector<double> enviroment_potential;
-        std::vector<double> k;
+        
+        // Frequency grids
+        std::vector<double> k_x;
+        std::vector<double> k_y;
+        
+        // Operators (flat 2D arrays)
         std::vector<std::complex<double>> U_p;
         std::vector<std::complex<double>> U_k;
+        
+        // FFTW plans
         fftw_plan plan_forward;
         fftw_plan plan_backward;
         fftw_complex *psi_in;
+
         double dt;
-        double dk;
-        double dx;
-        double N;
-        double L;
+        double dk_x;
+        double dk_y;
+        double h;
+        double Lx;
+        double Ly;
+        double Nx;
+        double Ny;
         size_t padding;
         double dt_saftey_factor;
-        int number_of_waves;
+        int number_of_waves_x;
+        int number_of_waves_y;
+
+        inline size_t index(size_t ix, size_t iy) const { return iy * (size_t)Nx + ix; }
+        double calculate_norm();
 
         void configure_fftw_plans();
         void set_parameters();
+        void initialize_frequency_grids();
         void initialize_grid();
         void initialize_wavefunction();
         void initialize_enviroment_potential();
@@ -47,7 +67,8 @@ class SSFM2D {
         void potential_half_step_and_normalize();
 
     public:
-        SSFM2D(double N = 1024, double L = 1, size_t padding = 50, double dt_saftey_factor = 0.1, int number_of_waves = 40);
+         SSFM2D(double Nx = 256, double Ny = 256, double Lx = 1.0, size_t padding = 16, 
+             double dt_saftey_factor = 0.2, int number_of_waves_x = 10, int number_of_waves_y = 10);
         ~SSFM2D();
         
         double get_dt() const { return dt; }
