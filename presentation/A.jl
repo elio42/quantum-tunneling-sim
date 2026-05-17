@@ -16,276 +16,71 @@ macro bind(def, element)
     #! format: on
 end
 
-# ╔═╡ d0f41bb2-4d09-11f1-a19d-7fab18b3a7f1
-begin
-using Markdown
-using FFTW
-using PlutoUI
+# ╔═╡ 16f0c987-2f8b-4ecf-8a9a-14594e8e1fea
 using Plots
-using Roots
-end
 
-# ╔═╡ 3acd2c88-8b7a-4052-88ae-62f4ca09a856
-function normalize(ψ)
-	n = sqrt(sum(abs.(ψ)))
-	return ψ./n
-end
+# ╔═╡ 8441cef3-af12-46b0-945f-6ddab58679e7
+using PlutoUI
 
-# ╔═╡ 3a362b93-b9c5-4345-afd1-b70b92049f68
-md"""
-# How does Fourier Transform Work?
-"""
+# ╔═╡ 1c2fa972-4f9c-11f1-9bbf-c3e77b12220d
+@bind ν Slider(-11:1:11)
 
-# ╔═╡ bd359047-a05a-46e9-abe1-c0a4e7ba354f
-md"""
-**Frequency 1 (Hz)**
-$(@bind f1 Slider(1:0.1:20, default=2.0, show_value=true))
+# ╔═╡ 3c1255a6-af53-4b60-a8ae-9bf3ae83d02b
+@bind tt Clock(0.1)
 
-**Frequency 2 (Hz)**
-$(@bind f2 Slider(1:0.1:20, default=2.0, show_value=true))
-"""
-
-# ╔═╡ c13742d9-8cbe-4667-8769-f550783d8a44
+# ╔═╡ 5db7137c-3538-4acc-acab-8c1d0e9cbf83
 begin
-	# Sampling Parameters
-	sample_rate = 10000.0          # Hz
-	duration = 1.0
-	time_vec = collect(0 : (1/sample_rate) : (duration - 1/sample_rate))
-	freq1 = 2.0
-	# Create two sine waves
-	y1 = sin.((2π *f1).* time_vec)
-	y2 = 0.5 * sin.(2π.*f2* time_vec) # Fixed amplitude for wave 2 for simplicity
+	xred = 0:10
+	reduction = 50
+	x = 0:(1/reduction):10
 	
-	combined_signal = y1 + y2
 	
-	plot(time_vec, [y1, y2, combined_signal], 
-		layout=(3,1), 
-		label=["Wave 1" "Wave 2" "Combined"], 
-		title=["Component 1" "Component 2" "The Resulting Signal (Time Domain)"],
-		xlabel="Time (s)",
-		ylabel="Amplitude",
-		size=(800, 600),
-		legend=:topright)
-
-
-end
-
-# ╔═╡ fb34708d-a4a2-494b-89aa-326d81ae9eac
-begin
-	# Compute FFT
-	transformed = fft(combined_signal)
-	n = length(combined_signal)
 	
-	# Frequency bins
-	freqs = fftfreq(n, sample_rate)
+	θ = 2π*x/10
+	θred = 2π*xred/10
+	νper = (20+ν)%10
+
+	l=length(x)
+	t = tt%l
+	tred = t÷reduction+1
+	r=l/reduction
 	
-	# We only care about the positive frequencies for real signals
-	# And we take the absolute value (magnitude) of the complex numbers
-	plot(freqs[1:div(n,2)], abs.(transformed[1:div(n,2)]), 
-		st=:stem,
-		title="Frequency Domain (The 'Recipe')",
-		xlabel="Frequency (Hz)",
-		ylabel="Strength",
-		label="FFT Output",
-		color=:red,
-		size=(800, 200),
-		xlims=(0, 60))
-end
+	ct = (t/l)*2π*ν
 
-# ╔═╡ bf194973-dcd6-4385-9ab2-536e91729645
-md""""
-# Initializing Wave Packets
-
-**$x_0$:**
-$(@bind x₀ Slider(1:1024, default=2.0, show_value=true))
-
-**$k_0$:**
-$(@bind k₀ Slider(-0.5:0.01:0.5, default=2.0, show_value=true))
-
-**$σ_0$:**
-$(@bind σ₀ Slider(1:0.1:200, default=2.0, show_value=true))
-
-"""
-
-# ╔═╡ 84f315c7-b9f1-4f77-a25c-457b41011188
-begin
-	x = 0:1024
-	function gaussian_packet(x, σ, k0, x0)
-		k= k0*2*π
-		dx = x .- x0
-	    amplitude = (1.0 / (σ * sqrt(2π)))^0.5
-	    envelope = exp.(-dx.^2 ./ (4 * σ^2))
-	    oscillation = exp.(im * k .* x)
-	    return amplitude .* envelope .* oscillation
-	end
-	ψ = gaussian_packet(x, σ₀ , k₀, x₀)
-
+	p1 = plot(cos.(θ),sin.(θ))
+	scatter!([cos(ν*θ[t])],[sin(ν*θ[t])])
+	scatter!(cos.(ν*θred[1:tred]),sin.(ν*θred[1:tred]))
 	
-
-	plot(x, real.(ψ), label="Real Part", lw=1.5, title="Gaussian Wave Packet")
-	plot!(x, imag.(ψ), label="Imagenary Part", lw=1.5)
-	plot!(x, abs.(ψ), label="Imagenary Part", lw=1.5)
-	plot!(size=(800, 200))
+	p2 = scatter(xred[1:tred],sin.(ν*θred[1:tred]))
+	plot!(x,sin.(ν*θ))
+	plot!(x,sin.(νper*θ))
+	scatter!([x[t]],[sin(ν*θ[t])])
+	ylims!(-1,1)
+	xlims!(0,10)
+	
+	combined_plot = plot(p1, p2, layout = (1, 2))
 
 	
 end
 
-# ╔═╡ 2ac798e7-4ed2-4f94-bfd7-5130b802eb46
-begin
-	
-	plot([-512:512],fftshift(abs.(fft(ψ))),title="Gaussian Wave in Momentum(k) Space")
-	plot!(size=(800, 200))
-end
+# ╔═╡ 198ba7fd-1e67-42ea-a2d0-24765b6b39cf
+a =  0:0.1:2π
 
-# ╔═╡ 2856bae8-dc3f-4ca4-9ded-586ad7de8fe7
-begin
-	N = length(ψ)
-	freq_axis = -(N÷2+1):(N÷2-1)
-	sum((abs.(fftshift(fft(ψ))).*freq_axis).^2)
-end
+# ╔═╡ 2cb3f9c8-db31-427c-ad65-3d5b2d9d4484
+sin.(a)
 
-# ╔═╡ 5e7c2fea-42b8-4dca-9542-118b6ea60428
-md"""
-# Time-Dependent Schrödinger Equation (TDSE)
-$$i\hbar \frac{\partial}{\partial t} \psi(x,t) = [\hat{T} + \hat{V}] \psi(x,t)$$
-where:\
-$\hat{T}$: Kinetic energy Operator \
-$\hat{V}$: Potential Energy Operator
-
-"""
-
-# ╔═╡ 6def2b50-c487-492c-9bf8-96768656b6e8
-md"""
-# Using Fourier Transform to solve the Kinetic Energy
-$\hat{T}=\frac{\hbar ^2}{2m} \nabla^2\xrightarrow{\mathcal{F}} \frac{\hbar^2 k^2}{2m}$
-where:\
-$\nabla^2 = \frac{\partial^2}{\partial^2 x}$ in 1D
-
-"""
-
-# ╔═╡ 9092412a-cf8f-4fb7-80c8-8bddacb652d0
-md""" 
-# How does split step FFT work?
-let $\psi$ be ower wave function. We use $\tilde{\psi} = \mathcal{F}[\psi]$
-- Applying Potential Op. :$\psi \cdot V(x)$
-- Fourier Transform: $\psi\xrightarrow{FFT}\tilde{\psi}$
-- Applying Momentum Op: 
-- Inverse Forier Transform: $\tilde{\psi}\xrightarrow{InvFFT}\psi$
-- Applying Potential Op: $\psi \cdot V(x)$
-
-"""
-
-
-# ╔═╡ 22786c57-cebf-427e-97b2-835dce416c39
-md"""
-# Runtime Analysis:
-- Applying Potential Op. : $\mathcal{O}(N)$
-- Fourier Transform: $\mathcal{O}(NlogN)$
-- Applying Momentum Op: $\mathcal{O}(N)$
-- Inverse Forier Transform: $\mathcal{O}(NlogN)$
-- Applying Potential Op: $\mathcal{O}(N)$
-
-"""
-
-# ╔═╡ 22223765-6156-4658-919e-41f0a2baad42
-md"""
-# Examples
-"""
-
-# ╔═╡ 5204f310-1ef5-4340-97f0-9445d0eb8bfa
-md"""
-## Finite Potential
-"""
-
-# ╔═╡ 3ada8199-e2b0-499b-aef3-d59b6214330c
-md"""
-## Tunneling
-"""
-
-# ╔═╡ 00f2614a-a9b6-47a1-a34d-5acb31568ba2
-md"""
-## The Standing Wave
-"""
-
-# ╔═╡ 32636d0d-90ef-4a7a-81c1-df22b1275cd4
-function solve_finite_well(V0, a; m=1.0, hbar=1.0)
-    # Scaling constant for the transcendental equations
-    z0 = sqrt(2 * m * V0 * a^2 / hbar^2)
-    
-    # Transcendental functions to find zeros: f(z) = 0
-    # Even states: z * tan(z) = sqrt(z0^2 - z^2)
-    f_even(z) = z * tan(z) - sqrt(z0^2 - z^2)
-    # Odd states: -z * cot(z) = sqrt(z0^2 - z^2)
-    f_odd(z) = -z * (1/tan(z)) - sqrt(z0^2 - z^2)
-    
-    ks = Float64[]
-    
-    # We search for roots in intervals of pi/2
-    num_intervals = Int(floor(z0 / (pi/2)))
-    for n in 0:num_intervals
-        lower = n * pi/2 + 1e-5
-        upper = min((n+1) * pi/2 - 1e-5, z0 - 1e-5)
-        
-        if lower < upper
-            if n % 2 == 0 # Even
-                try push!(ks, find_zero(f_even, (lower, upper)) / a) catch end
-            else # Odd
-                try push!(ks, find_zero(f_odd, (lower, upper)) / a) catch end
-            end
-        end
-    end
-    return ks
-end
-
-# ╔═╡ ef7c3c9f-8552-408b-9bc2-7294122ec1d1
-function ψₛ(x, k, V0, a; m=1.0, hbar=1.0, is_even=true)
-    α = sqrt(2 * m * V0 / hbar^2 - k^2)
-    
-    if abs(x) <= a
-        return is_even ? cos(k * x) : sin(k * x)
-    else
-        # Match boundary condition: C*exp(-α*|x|)
-        amplitude = is_even ? cos(k * a) : (x > 0 ? sin(k * a) : sin(k * -a))
-        return amplitude * exp(-α * (abs(x) - a))
-    end
-end
-
-# ╔═╡ e132942f-65ba-4d6a-a65f-936cec86c012
-begin
-	v₀= 10
-	a=1
-	ks = solve_finite_well(v₀, a)
-end
-
-# ╔═╡ 8bc2889d-7007-440d-aa66-ceef0e4b37c4
-x₂ = range(-4a, 4a, length=4096)
-
-# ╔═╡ 1060a219-408f-4d9e-9ae0-708908c38330
-begin
-	p = plot(title="Finite Well Standing Waves")
-	for (i, k) in enumerate(ks)
-    	y_vals = [ψₛ(x, k, v₀, a, is_even=(i%2!=0)) for x in x₂]
-    	plot!(p, x₂, abs.(y_vals), label="n=$i")
-	end
-	v(x)= (abs(x)>a)*v₀
-	plot!(p,x₂,v.(x₂))
-	p
-end
+# ╔═╡ 5989ad3d-02fa-4094-9b3c-29a410d9241d
+0:10
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
-FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
-Markdown = "d6f4376e-aef5-505a-96c1-9c027394607a"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
 
 [compat]
-FFTW = "~1.10.0"
 Plots = "~1.41.1"
 PlutoUI = "~0.7.75"
-Roots = "~3.0.0"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -294,51 +89,13 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.12.1"
 manifest_format = "2.0"
-project_hash = "8522b1500e152e24b0bce9fc735d9f25d4466800"
-
-[[deps.AbstractFFTs]]
-deps = ["LinearAlgebra"]
-git-tree-sha1 = "d92ad398961a3ed262d8bf04a1a2b8340f915fef"
-uuid = "621f4979-c628-5d54-868e-fcf4e3e8185c"
-version = "1.5.0"
-
-    [deps.AbstractFFTs.extensions]
-    AbstractFFTsChainRulesCoreExt = "ChainRulesCore"
-    AbstractFFTsTestExt = "Test"
-
-    [deps.AbstractFFTs.weakdeps]
-    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-    Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+project_hash = "69a15f9532930114d3cd35c580a475da7b96b2a8"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
 git-tree-sha1 = "6e1d2a35f2f90a4bc7c2ed98079b2ba09c35b83a"
 uuid = "6e696c72-6542-2067-7265-42206c756150"
 version = "1.3.2"
-
-[[deps.Accessors]]
-deps = ["CompositionsBase", "ConstructionBase", "Dates", "InverseFunctions", "MacroTools"]
-git-tree-sha1 = "856ecd7cebb68e5fc87abecd2326ad59f0f911f3"
-uuid = "7d9f7c33-5ae7-4f3b-8dc6-eff91059b697"
-version = "0.1.43"
-
-    [deps.Accessors.extensions]
-    AxisKeysExt = "AxisKeys"
-    IntervalSetsExt = "IntervalSets"
-    LinearAlgebraExt = "LinearAlgebra"
-    StaticArraysExt = "StaticArrays"
-    StructArraysExt = "StructArrays"
-    TestExt = "Test"
-    UnitfulExt = "Unitful"
-
-    [deps.Accessors.weakdeps]
-    AxisKeys = "94b1ba4f-4ee9-5380-92f1-94cde586c3c5"
-    IntervalSets = "8197267c-284f-5f27-9208-e0e47529a953"
-    LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-    StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
-    StructArrays = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
-    Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-    Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [[deps.AliasTables]]
 deps = ["PtrArrays", "Random"]
@@ -415,45 +172,16 @@ git-tree-sha1 = "37ea44092930b1811e666c3bc38065d7d87fcc74"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.13.1"
 
-[[deps.CommonSolve]]
-git-tree-sha1 = "0eee5eb66b1cf62cd6ad1b460238e60e4b09400c"
-uuid = "38540f10-b2f7-11e9-35d8-d573e4eb0ff2"
-version = "0.2.4"
-
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
 version = "1.3.0+1"
-
-[[deps.CompositionsBase]]
-git-tree-sha1 = "802bb88cd69dfd1509f6670416bd4434015693ad"
-uuid = "a33af91c-f02d-484b-be07-31d278c5ca2b"
-version = "0.1.2"
-weakdeps = ["InverseFunctions"]
-
-    [deps.CompositionsBase.extensions]
-    CompositionsBaseInverseFunctionsExt = "InverseFunctions"
 
 [[deps.ConcurrentUtilities]]
 deps = ["Serialization", "Sockets"]
 git-tree-sha1 = "d9d26935a0bcffc87d2613ce14c527c99fc543fd"
 uuid = "f0e56b4a-5159-44fe-b623-3e5288b988bb"
 version = "2.5.0"
-
-[[deps.ConstructionBase]]
-git-tree-sha1 = "b4b092499347b18a015186eae3042f72267106cb"
-uuid = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
-version = "1.6.0"
-
-    [deps.ConstructionBase.extensions]
-    ConstructionBaseIntervalSetsExt = "IntervalSets"
-    ConstructionBaseLinearAlgebraExt = "LinearAlgebra"
-    ConstructionBaseStaticArraysExt = "StaticArrays"
-
-    [deps.ConstructionBase.weakdeps]
-    IntervalSets = "8197267c-284f-5f27-9208-e0e47529a953"
-    LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-    StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [[deps.Contour]]
 git-tree-sha1 = "439e35b0b36e2e5881738abc8857bd92ad6ff9a8"
@@ -527,18 +255,6 @@ deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "JLLWrappers",
 git-tree-sha1 = "ccc81ba5e42497f4e76553a5545665eed577a663"
 uuid = "b22a6f82-2f65-5046-a5b2-351ab43fb4e5"
 version = "8.0.0+0"
-
-[[deps.FFTW]]
-deps = ["AbstractFFTs", "FFTW_jll", "Libdl", "LinearAlgebra", "MKL_jll", "Preferences", "Reexport"]
-git-tree-sha1 = "97f08406df914023af55ade2f843c39e99c5d969"
-uuid = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
-version = "1.10.0"
-
-[[deps.FFTW_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "6d6219a004b8cf1e0b4dbe27a2860b8e04eba0be"
-uuid = "f5851436-0d7a-5f13-b9de-f02708fd171a"
-version = "3.3.11+0"
 
 [[deps.FileWatching]]
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
@@ -650,26 +366,10 @@ git-tree-sha1 = "0ee181ec08df7d7c911901ea38baf16f755114dc"
 uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
 version = "1.0.0"
 
-[[deps.IntelOpenMP_jll]]
-deps = ["Artifacts", "JLLWrappers", "LazyArtifacts", "Libdl"]
-git-tree-sha1 = "ec1debd61c300961f98064cfb21287613ad7f303"
-uuid = "1d5cc7b8-4909-519e-a0f8-d0f5ad9712d0"
-version = "2025.2.0+0"
-
 [[deps.InteractiveUtils]]
 deps = ["Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 version = "1.11.0"
-
-[[deps.InverseFunctions]]
-git-tree-sha1 = "a779299d77cd080bf77b97535acecd73e1c5e5cb"
-uuid = "3587e190-3f89-42d0-90ee-14403ec27112"
-version = "0.1.17"
-weakdeps = ["Dates", "Test"]
-
-    [deps.InverseFunctions.extensions]
-    InverseFunctionsDatesExt = "Dates"
-    InverseFunctionsTestExt = "Test"
 
 [[deps.IrrationalConstants]]
 git-tree-sha1 = "b2d91fe939cae05960e760110b328288867b5758"
@@ -757,11 +457,6 @@ version = "0.16.10"
     SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
     SymEngine = "123dc426-2d89-5057-bbad-38513e3affd8"
     tectonic_jll = "d7dd28d6-a5e6-559c-9131-7eb760cdacc5"
-
-[[deps.LazyArtifacts]]
-deps = ["Artifacts", "Pkg"]
-uuid = "4af54fe1-eca0-43a8-85a7-787d91b784e3"
-version = "1.11.0"
 
 [[deps.LibCURL]]
 deps = ["LibCURL_jll", "MozillaCACerts_jll"]
@@ -863,12 +558,6 @@ version = "1.2.0"
 git-tree-sha1 = "c64d943587f7187e751162b3b84445bbbd79f691"
 uuid = "6c6e2e6c-3030-632d-7369-2d6c69616d65"
 version = "1.1.0"
-
-[[deps.MKL_jll]]
-deps = ["Artifacts", "IntelOpenMP_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "oneTBB_jll"]
-git-tree-sha1 = "282cadc186e7b2ae0eeadbd7a4dffed4196ae2aa"
-uuid = "856f044c-d86e-5d09-b602-aeab76dc8ba7"
-version = "2025.2.0+0"
 
 [[deps.MacroTools]]
 git-tree-sha1 = "1e0228a030642014fe5cfe68c2c0a818f9e3f522"
@@ -1113,28 +802,6 @@ deps = ["UUIDs"]
 git-tree-sha1 = "62389eeff14780bfe55195b7204c0d8738436d64"
 uuid = "ae029012-a4dd-5104-9daa-d747884805df"
 version = "1.3.1"
-
-[[deps.Roots]]
-deps = ["Accessors", "CommonSolve", "Printf"]
-git-tree-sha1 = "91cfb1cb4f6e27557cc2df798a31eff6089a41eb"
-uuid = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
-version = "3.0.0"
-
-    [deps.Roots.extensions]
-    RootsChainRulesCoreExt = "ChainRulesCore"
-    RootsForwardDiffExt = "ForwardDiff"
-    RootsIntervalRootFindingExt = "IntervalRootFinding"
-    RootsSymPyExt = "SymPy"
-    RootsSymPyPythonCallExt = "SymPyPythonCall"
-    RootsUnitfulExt = "Unitful"
-
-    [deps.Roots.weakdeps]
-    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-    ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
-    IntervalRootFinding = "d2bf35a9-74e0-55ec-b149-d360ff49b807"
-    SymPy = "24249f21-da20-56a4-8eb1-6a02cf4ae2e6"
-    SymPyPythonCall = "bc8888f7-b21e-4b7c-a06a-5d9c9496438c"
-    Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [[deps.SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
@@ -1526,12 +1193,6 @@ deps = ["Artifacts", "Libdl"]
 uuid = "8e850ede-7688-5339-a07c-302acd2aaf8d"
 version = "1.64.0+1"
 
-[[deps.oneTBB_jll]]
-deps = ["Artifacts", "JLLWrappers", "LazyArtifacts", "Libdl"]
-git-tree-sha1 = "1350188a69a6e46f799d3945beef36435ed7262f"
-uuid = "1317d2d5-d96f-522e-a858-c73665f53c3e"
-version = "2022.0.0+1"
-
 [[deps.p7zip_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
@@ -1557,28 +1218,13 @@ version = "1.9.2+0"
 """
 
 # ╔═╡ Cell order:
-# ╠═d0f41bb2-4d09-11f1-a19d-7fab18b3a7f1
-# ╠═3acd2c88-8b7a-4052-88ae-62f4ca09a856
-# ╟─3a362b93-b9c5-4345-afd1-b70b92049f68
-# ╟─bd359047-a05a-46e9-abe1-c0a4e7ba354f
-# ╟─c13742d9-8cbe-4667-8769-f550783d8a44
-# ╟─fb34708d-a4a2-494b-89aa-326d81ae9eac
-# ╟─bf194973-dcd6-4385-9ab2-536e91729645
-# ╟─84f315c7-b9f1-4f77-a25c-457b41011188
-# ╟─2ac798e7-4ed2-4f94-bfd7-5130b802eb46
-# ╟─2856bae8-dc3f-4ca4-9ded-586ad7de8fe7
-# ╟─5e7c2fea-42b8-4dca-9542-118b6ea60428
-# ╟─6def2b50-c487-492c-9bf8-96768656b6e8
-# ╠═9092412a-cf8f-4fb7-80c8-8bddacb652d0
-# ╟─22786c57-cebf-427e-97b2-835dce416c39
-# ╠═22223765-6156-4658-919e-41f0a2baad42
-# ╠═5204f310-1ef5-4340-97f0-9445d0eb8bfa
-# ╠═3ada8199-e2b0-499b-aef3-d59b6214330c
-# ╠═00f2614a-a9b6-47a1-a34d-5acb31568ba2
-# ╟─32636d0d-90ef-4a7a-81c1-df22b1275cd4
-# ╟─ef7c3c9f-8552-408b-9bc2-7294122ec1d1
-# ╟─e132942f-65ba-4d6a-a65f-936cec86c012
-# ╟─8bc2889d-7007-440d-aa66-ceef0e4b37c4
-# ╟─1060a219-408f-4d9e-9ae0-708908c38330
+# ╠═16f0c987-2f8b-4ecf-8a9a-14594e8e1fea
+# ╠═8441cef3-af12-46b0-945f-6ddab58679e7
+# ╠═1c2fa972-4f9c-11f1-9bbf-c3e77b12220d
+# ╠═3c1255a6-af53-4b60-a8ae-9bf3ae83d02b
+# ╠═5db7137c-3538-4acc-acab-8c1d0e9cbf83
+# ╠═2cb3f9c8-db31-427c-ad65-3d5b2d9d4484
+# ╠═198ba7fd-1e67-42ea-a2d0-24765b6b39cf
+# ╠═5989ad3d-02fa-4094-9b3c-29a410d9241d
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
