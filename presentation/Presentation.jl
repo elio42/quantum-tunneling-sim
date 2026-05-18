@@ -64,14 +64,14 @@ md"""
 # Using Fourier Transform to solve the Kinetic Energy
 $\hat{T}=\frac{\hbar ^2}{2m} \nabla^2\xrightarrow{\mathcal{F}} \frac{\hbar^2 k^2}{2m}$
 where:\
-$\nabla^2 = \frac{\partial^2}{\partial^2 x}$ in 1D
+$\nabla^2 = \frac{\partial^2}{\partial x^2}$ in 1D
 
 """
 
 # ╔═╡ 3a362b93-b9c5-4345-afd1-b70b92049f68
 md"""
 ## How does Fourier Transform Work?
-The mathematical definition of the forward and backwards Forier Transform are folowing.\
+The mathematical definition of the forward and backwards Fourier Transform are following.\
 The **Forward Fourier** Transform:
 """
 
@@ -249,7 +249,7 @@ begin
 	
 
 	plot(x, real.(ψ), label="Real Part", lw=1.5, title="Gaussian Wave Packet",color="teal")
-	plot!(x, imag.(ψ), label="Imagenary Part", lw=1.5,color="skyblue")
+	plot!(x, imag.(ψ), label="Imaginary Part", lw=1.5,color="skyblue")
 	plot!(x, abs.(ψ), label="Absolute", lw=1.5,color ="red")
 	plot!(size=(800, 200))
 
@@ -326,7 +326,7 @@ begin
 	p2 = scatter(xred[1:tred],sin.(ν*θred[1:tred]),color="orange")
 	
 	
-		plot!(xa,sin.(νper*θ),color="purple", label="Signal percived by FFT")
+		plot!(xa,sin.(νper*θ),color="purple", label="Signal perceived by FFT")
 	if cur2bol
 		plot!(xa,sin.(ν*θ),linestyle=:dash,label="Real Signal",color="red")
 		scatter!([xa[t]],[sin(ν*θ[t])],color="red")
@@ -385,11 +385,11 @@ end
 # ╔═╡ 9092412a-cf8f-4fb7-80c8-8bddacb652d0
 md""" 
 # How does split step FFT work?
-let $\psi$ be ower wave function. We use $\tilde{\psi} = \mathcal{F}[\psi]$
+let $\psi$ be our wave function. We use $\tilde{\psi} = \mathcal{F}[\psi]$
 - Applying Potential Op. :$\psi \cdot V(x)$
 - Fourier Transform: $\psi\xrightarrow{FFT}\tilde{\psi}$
 - Applying Momentum Op:$\frac{\hbar^2 k^2}{2m}$ 
-- Inverse Forier Transform: $\tilde{\psi}\xrightarrow{InvFFT}\psi$
+- Inverse Fourier Transform: $\tilde{\psi}\xrightarrow{InvFFT}\psi$
 - Applying Potential Op: $\psi \cdot V(x)$
 
 """
@@ -401,7 +401,7 @@ md"""
 - Applying Potential Op. : $\mathcal{O}(N)$
 - Fourier Transform: $\mathcal{O}(NlogN)$
 - Applying Momentum Op: $\mathcal{O}(N)$
-- Inverse Forier Transform: $\mathcal{O}(NlogN)$
+- Inverse Fourier Transform: $\mathcal{O}(NlogN)$
 - Applying Potential Op: $\mathcal{O}(N)$
 
 """
@@ -437,8 +437,8 @@ begin
 
 	
 	plot(real.(ani1[t1]),color="teal",label="real")
-	plot!(imag.(ani1[t1]),color="skyblue",label="imagenary")
-	plot!(abs.(ani1[t1]),color="red",label="absolut")
+	plot!(imag.(ani1[t1]),color="skyblue",label="imaginary")
+	plot!(abs.(ani1[t1]),color="red",label="absolute")
 	ylims!(-1.6,1.6)
 end
 
