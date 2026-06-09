@@ -40,10 +40,16 @@
 # debug information files
 *.dwo
 
-# build directory
-build/
-
+# Temporary files
+**build*/
+**output*/
 
 #Gnuplot Header files
 gnuplot-iostream.h
 *.gp
+
+**.mp4
+
+**__pycache__**
+
+**.png
