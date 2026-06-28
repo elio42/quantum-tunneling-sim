@@ -1,6 +1,10 @@
-# NAND-Flash_simulation_ESC202
+# Quantum tunneling simulation
 
-
+* Simulation of electrons in a potential well using the time-dependent Schrödinger equation in one dimension
+  * 2-dimensional implementation on a separate branch [WIP]
+* Numerical solution of the wave equation using the split-step Fourier method to analyze the
+quantum tunneling effect
+* Custom FFT-solver
 
 ## Building and dependencies
 
@@ -16,8 +20,7 @@
 
 suggestion for parameters
 
-- "Nice looking":
-  - `./build/SSFM1D -N 4096 -L 20 -s 0.5 -w 120 -t 2 -i 0.0025 --tunneling-pot 700 && python3 animate_wavefunction.py`
 - Realistic values:
   - `./build/SSFM1D -N 4096 -L 1935 -s 48 -w 138 -t 20000 -i 20 --tunneling-pot 0.114 -b 10 && python3 animate_wavefunction.py`
-  - 
+- "Nice looking":
+  - `./build/SSFM1D -N 4096 -L 20 -s 0.5 -w 120 -t 2 -i 0.0025 --tunneling-pot 700 && python3 animate_wavefunction.py`
