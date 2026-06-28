@@ -53,3 +53,13 @@ gnuplot-iostream.h
 **__pycache__**
 
 **.png
+
+*.csv
+
+# build directory
+build/
+
+
+#Gnuplot Header files
+gnuplot-iostream.h
+*.gp
